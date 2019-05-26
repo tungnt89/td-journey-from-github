@@ -6,31 +6,41 @@ use App\User;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Faker\Factory;
 
 class AuthTest extends TestCase
 {
+    use RefreshDatabase;
+    protected $faker;
 
+    public function setUp()
+    {
+        parent::setUp();
+        $this->faker = Factory::create();
+    }
     /**
      * @test
      * Test registration
      */
-    public function testRegister(){
+    public function testRegister()
+    {
         //User's data
         $data = [
-            'email' => 'test@gmail.com',
-            'name' => 'Test',
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
             'password' => 'secret1234',
             'password_confirmation' => 'secret1234',
         ];
 
+        // $token = JWTAuth::fromUser($user);
         //Send post request
-        $response = $this->json('POST',route('api.register'),$data);
+        $response = $this->json('POST', route('api.register'), $data);
         //Assert it was successful
         $response->assertStatus(200);
         //Assert we received a token
-        $this->assertArrayHasKey('token',$response->json());
-        //Delete data
-        User::where('email','test@gmail.com')->delete();
+        $this->assertArrayHasKey('token', $response->json());
     }
 
     /**
@@ -39,24 +49,18 @@ class AuthTest extends TestCase
      */
     public function testLogin()
     {
-        //Create user
-        User::create([
-            'name' => 'test',
-            'email'=>'test@gmail.com',
-            'password' => bcrypt('secret1234')
+        $user = User::create([
+            'name' => $this->faker->name,
+            'email' => $this->faker->unique()->safeEmail,
+            'password' => Hash::make('secret1234'),
         ]);
-
-        //attempt login
-        $response = $this->json('POST',route('api.authenticate'),[
-            'email' => 'test@gmail.com',
-            'password' => 'secret1234',
-        ]);
-        //Assert it was successful and a token was received
+        
+        $token = JWTAuth::fromUser($user);
+        $response = $this->withHeaders(['Authorization' => 'Bearer '. $token,])->json('POST',route('api.login'),[
+                'email' => $user->email,
+                'password' => 'secret1234',
+            ]);;
+        
         $response->assertStatus(200);
-        $this->assertArrayHasKey('token',$response->json());
-        //Delete the user
-        User::where('email','test@gmail.com')->delete();
     }
-
-
 }

@@ -9,18 +9,26 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Faker\Factory;
 
 class RecipeTest extends TestCase
 {
     use RefreshDatabase;
-
     protected $user;
+    protected $faker;
+
+    public function setUp()
+    {
+        parent::setUp();
+        $this->faker = Factory::create();
+    }
 
     /**
      * Create user and get token
      * @return string
      */
-    protected function authenticate(){
+    protected function authenticate()
+    {
         $user = User::create([
             'name' => 'test',
             'email' => 'test@gmail.com',
@@ -31,93 +39,89 @@ class RecipeTest extends TestCase
         return $token;
     }
 
+    public function testAll()
+    {
+        //Authenticate and attach recipe to user
+        $token = $this->authenticate();
+        $recipes = factory(Recipe::class, 5)->create()->map(function ($recipe) {
+            return $recipe->only(['id', 'title', 'procedure']);
+        });
+        // $this->user->recipes()->save($recipes);
+
+        //call route and assert response
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '. $token,
+        ])->json('GET', route('recipe.all'));
+        $response->assertStatus(200)
+        // ->assertJsonFragment($recipes->toArray())
+        ->assertJsonStructure([
+            '*' => [ 'id', 'title', 'procedure' ],
+        ]);
+    }
+
+    public function testShow()
+    {
+        $token = $this->authenticate();
+        $recipe = factory(Recipe::class)->create();
+        $this->user->recipes()->save($recipe);
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer '. $token,
+        ])->json('GET', route('recipe.show', ['recipe' => $recipe->id]));
+        $response->assertStatus(200);
+
+        //Assert title is correct
+        $this->assertEquals($recipe->title, $response->json()['title']);
+    }
+    
     public function testCreate()
     {
         //Get token
         $token = $this->authenticate();
-
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer '. $token,
-        ])->json('POST',route('recipe.create'),[
-            'title' => 'Jollof Rice',
-            'procedure' => 'Parboil rice, get pepper and mix, and some spice and serve!'
-        ]);
+        $data = [
+            'title' => $this->faker->sentence,
+            'procedure' => $this->faker->paragraph,
+        ];
+        $response = $this->withHeaders(['Authorization' => 'Bearer '. $token,])
+                    ->json('POST', route('recipe.create'), $data);
         $response->assertStatus(200);
         //Get count and assert
         $count = $this->user->recipes()->count();
-        $this->assertEquals(1,$count);
+        $this->assertEquals(1, $count);
     }
 
-    public function testAll(){
-        //Authenticate and attach recipe to user
+    public function testUpdate()
+    {
         $token = $this->authenticate();
-        $recipe = Recipe::create([
-            'title' => 'Jollof Rice',
-            'procedure' => 'Parboil rice, get pepper and mix, and some spice and serve!'
-        ]);
+        $recipe = factory(Recipe::class)->create();
         $this->user->recipes()->save($recipe);
-
+        $data = [
+            'title' => $this->faker->sentence,
+            'procedure' => $this->faker->paragraph
+        ];
         //call route and assert response
         $response = $this->withHeaders([
             'Authorization' => 'Bearer '. $token,
-        ])->json('GET',route('recipe.all'));
-        $response->assertStatus(200);
-
-        //Assert the count is 1 and the title of the first item correlates
-        $this->assertEquals(1,count($response->json()));
-        $this->assertEquals('Jollof Rice',$response->json()[0]['title']);
-    }
-
-    public function testUpdate(){
-        $token = $this->authenticate();
-        $recipe = Recipe::create([
-            'title' => 'Jollof Rice',
-            'procedure' => 'Parboil rice, get pepper and mix, and some spice and serve!'
-        ]);
-        $this->user->recipes()->save($recipe);
-
-        //call route and assert response
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer '. $token,
-        ])->json('POST',route('recipe.update',['recipe' => $recipe->id]),[
-            'title' => 'Rice',
+        ])->json('POST', route('recipe.update', ['recipe' => $recipe->id]), [
+            'title' => $data['title'],
         ]);
         $response->assertStatus(200);
 
         //Assert title is the new title
-        $this->assertEquals('Rice',$this->user->recipes()->first()->title);
+        $this->assertEquals($data['title'], $this->user->recipes()->first()->title);
     }
 
-    public function testShow(){
+    public function testDelete()
+    {
         $token = $this->authenticate();
-        $recipe = Recipe::create([
-            'title' => 'Jollof Rice',
-            'procedure' => 'Parboil rice, get pepper and mix, and some spice and serve!'
-        ]);
-        $this->user->recipes()->save($recipe);
-        $response = $this->withHeaders([
-            'Authorization' => 'Bearer '. $token,
-        ])->json('GET',route('recipe.show',['recipe' => $recipe->id]));
-        $response->assertStatus(200);
-
-        //Assert title is correct
-        $this->assertEquals('Jollof Rice',$response->json()['title']);
-    }
-
-    public function testDelete(){
-        $token = $this->authenticate();
-        $recipe = Recipe::create([
-            'title' => 'Jollof Rice',
-            'procedure' => 'Parboil rice, get pepper and mix, and some spice and serve!'
-        ]);
+        $recipe = factory(Recipe::class)->create();
         $this->user->recipes()->save($recipe);
 
         $response = $this->withHeaders([
             'Authorization' => 'Bearer '. $token,
-        ])->json('POST',route('recipe.delete',['recipe' => $recipe->id]));
+        ])->json('POST', route('recipe.delete', ['recipe' => $recipe->id]));
         $response->assertStatus(200);
 
         //Assert there are no recipes
-        $this->assertEquals(0,$this->user->recipes()->count());
+        $this->assertEquals(0, $this->user->recipes()->count());
     }
 }

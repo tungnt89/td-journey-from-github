@@ -13,17 +13,25 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+// Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+//     Route::post('login', 'AuthController@login')->name('api.login');
+//     Route::post('signup', 'AuthController@signup');
+  
+//     Route::group(['middleware' => 'auth:api'], function () {
+//         Route::get('logout', 'AuthController@logout');
+//         Route::get('user', 'AuthController@user');
+//     });
+// });
 
-    Route::post('authenticate', 'AuthController@authenticate')->name('api.authenticate');
+Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+    Route::post('login', 'AuthController@login')->name('api.login');
     Route::post('register', 'AuthController@register')->name('api.register');
 });
 
-Route::group(['middleware' => ['api','auth'],'prefix' => 'recipe'],function (){
-    Route::post('create','RecipeController@create')->name('recipe.create');
-    Route::get('all','RecipeController@all')->name('recipe.all');
-    Route::post('update/{recipe}','RecipeController@update')->name('recipe.update');
-    Route::get('show/{recipe}','RecipeController@show')->name('recipe.show');
-    Route::post('delete/{recipe}','RecipeController@delete')->name('recipe.delete');
+Route::group(['middleware' => ['api','auth'], 'prefix' => 'recipe'], function () {
+    Route::get('all', 'RecipeController@all')->name('recipe.all');
+    Route::get('show/{recipe}', 'RecipeController@show')->name('recipe.show');
+    Route::post('create', 'RecipeController@create')->name('recipe.create');
+    Route::post('update/{recipe}', 'RecipeController@update')->name('recipe.update');
+    Route::post('delete/{recipe}', 'RecipeController@delete')->name('recipe.delete');
 });
-

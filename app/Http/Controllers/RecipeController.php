@@ -9,6 +9,22 @@ use Illuminate\Support\Facades\Auth;
 class RecipeController extends Controller
 {
     /**
+     * Get all recipes
+     * @return mixed
+     */
+    public function all(){
+        return Auth::user()->recipes;
+    }
+
+    public function show(Recipe $recipe){
+        if($recipe->publisher_id != Auth::id()){
+            abort(404);
+            return;
+        }
+        return $recipe->toJson();
+    }
+
+    /**
      * @param Request $request
      * @return string
      * @throws \Illuminate\Validation\ValidationException
@@ -26,14 +42,6 @@ class RecipeController extends Controller
         return $recipe->toJson();
     }
 
-    /**
-     * Get all recipes
-     * @return mixed
-     */
-    public function all(){
-        return Auth::user()->recipes;
-    }
-
     public function update(Request $request, Recipe $recipe){
         //Check is user is the owner of the recipe
         if($recipe->publisher_id != Auth::id()){
@@ -42,14 +50,6 @@ class RecipeController extends Controller
         }
         //Update and return
         $recipe->update($request->only('title','procedure'));
-        return $recipe->toJson();
-    }
-
-    public function show(Recipe $recipe){
-        if($recipe->publisher_id != Auth::id()){
-            abort(404);
-            return;
-        }
         return $recipe->toJson();
     }
 
