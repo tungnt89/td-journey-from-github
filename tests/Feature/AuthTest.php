@@ -56,6 +56,7 @@ class AuthTest extends TestCase
         ]);
         
         $token = JWTAuth::fromUser($user);
+        dd($token);
         $response = $this->withHeaders(['Authorization' => 'Bearer '. $token,])->json('POST',route('api.login'),[
                 'email' => $user->email,
                 'password' => 'secret1234',

@@ -9,55 +9,85 @@ use Illuminate\Support\Facades\Auth;
 class RecipeController extends Controller
 {
     /**
-     * Get all recipes
-     * @return mixed
+     * Get all recipes.
      */
-    public function all(){
-        return Auth::user()->recipes;
-    }
-
-    public function show(Recipe $recipe){
-        if($recipe->publisher_id != Auth::id()){
-            abort(404);
-            return;
+    public function all()
+    {
+        try {
+            return Recipe::all();
+        } catch (\Exception $e) {
+            echo $e->getMessage();
         }
-        return $recipe->toJson();
     }
 
     /**
-     * @param Request $request
-     * @return string
-     * @throws \Illuminate\Validation\ValidationException
+     * show specify recipe.
+     *
+     * @param mixed $id
      */
-    public function create(Request $request){
-        //Validate
-        $this->validate($request,['title' => 'required','procedure' => 'required|min:8']);
-
-        //Create recipe and attach to user
-        $user = Auth::user();
-        $recipe = Recipe::create($request->only(['title','procedure']));
-        $user->recipes()->save($recipe);
-
-        //Return json of recipe
-        return $recipe->toJson();
+    public function show($id)
+    {
+        try {
+            return Recipe::findOrFail($id);
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
     }
 
-    public function update(Request $request, Recipe $recipe){
-        //Check is user is the owner of the recipe
-        if($recipe->publisher_id != Auth::id()){
-            abort(404);
-            return;
+    /**
+     * create.
+     *
+     * @param mixed $request
+     */
+    public function create(Request $request)
+    {
+        try {
+            //Validate
+            $this->validate($request, ['title' => 'required', 'procedure' => 'required|min:8']);
+            $recipe = new Recipe();
+            $recipe->title = $request->title;
+            $recipe->procedure = $request->procedure;
+            $recipe->publisher_id = Auth::user()->id;
+            $recipe->save();
+
+            return $recipe->toJson();
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
-        //Update and return
-        $recipe->update($request->only('title','procedure'));
-        return $recipe->toJson();
     }
 
-    public function delete(Recipe $recipe){
-        if($recipe->publisher_id != Auth::id()){
-            abort(404);
-            return;
+    /**
+     * update.
+     *
+     * @param mixed $request
+     * @param mixed $id
+     */
+    public function update(Request $request, $id)
+    {
+        try {
+            $recipe = Recipe::findOrFail($id);
+            $recipe->update($request->all());
+
+            return $recipe;
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
-        $recipe->delete();
+    }
+
+    /**
+     * delete.
+     *
+     * @param mixed $id
+     */
+    public function delete($id)
+    {
+        try {
+            $recipe = Recipe::findOrFail($id);
+            $recipe->delete();
+
+            return $recipe->toJson();
+        } catch (\Exception $e) {
+            return $e->getMessage();
+        }
     }
 }
