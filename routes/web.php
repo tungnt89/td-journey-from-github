@@ -15,6 +15,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/aaa', function(){
+    return '<h1>aaa</h1>';
+});
+
+Route::post('login', 'AuthController@login')->name('web.login');
+Route::post('register', 'AuthController@register')->name('web.register');
+
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');

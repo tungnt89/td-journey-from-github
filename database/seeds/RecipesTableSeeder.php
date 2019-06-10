@@ -24,8 +24,8 @@ class RecipesTableSeeder extends Seeder
         
             Recipe::create([
                 'title' => $faker->sentence,
-                'procedure' => $faker->paragraph,
-                'publisher_id' => $user_ids[0]
+                'content' => $faker->paragraph,
+                'user_id' => $user_ids[0]
             ]);
         }
     }

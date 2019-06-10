@@ -15,6 +15,8 @@ class RecipeController extends Controller
     {
         try {
             return Recipe::all();
+            // return Recipe::all()->json();
+            // return Response::json(Recipe::all());
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
@@ -43,11 +45,11 @@ class RecipeController extends Controller
     {
         try {
             //Validate
-            $this->validate($request, ['title' => 'required', 'procedure' => 'required|min:8']);
+            $this->validate($request, ['title' => 'required', 'content' => 'required|min:8']);
             $recipe = new Recipe();
             $recipe->title = $request->title;
-            $recipe->procedure = $request->procedure;
-            $recipe->publisher_id = Auth::user()->id;
+            $recipe->content = $request->content;
+            $recipe->user_id = Auth::user()->id;
             $recipe->save();
 
             return $recipe->toJson();

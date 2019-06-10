@@ -50,16 +50,19 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        
+        dd(111);
+        // dd(Auth::attempt($credentials));
         //Validate fields
         $this->validate($request,['email' => 'required|email','password'=> 'required']);
         //Attempt validation
         $credentials = $request->only(['email','password']);
+        
         // dd($credentials);
         if (! $token = Auth::attempt($credentials)) {
+            // dd($token);
             return response()->json(['error' => 'Incorrect credentials'], 401);
         }
-        // dd($token);
+        
         return response()->json(compact('token'));
     }
   
