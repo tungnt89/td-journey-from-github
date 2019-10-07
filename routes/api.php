@@ -21,18 +21,27 @@
 //     });
 // });
 
+Route::post('register', 'UserController@register');
+Route::post('login', 'UserController@login');
+Route::post('logout', 'UserController@logout');
+Route::get('open', 'DataController@open');
 
-Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
-    Route::post('/auth/token', 'Auth\LoginController@auth');
-    Route::post('login', 'AuthController@login')->name('api.login');
-    Route::post('register', 'AuthController@register')->name('api.register');
+Route::group(['middleware' => ['jwt.verify']], function () {
+    Route::get('user', 'UserController@getAuthenticatedUser');
+    Route::get('closed', 'DataController@closed');
 });
 
-Route::group(['middleware' => ['api', 'auth'], 'prefix' => 'recipe'], function () {
-// Route::group(['middleware' => ['api'], 'prefix' => 'recipe'], function () {
-    Route::get('all', 'RecipeController@all')->name('recipe.all');
-    Route::get('show/{id}', 'RecipeController@show')->name('recipe.show');
-    Route::post('create', 'RecipeController@create')->name('recipe.create');
-    Route::post('update/{id}', 'RecipeController@update')->name('recipe.update');
-    Route::post('delete/{id}', 'RecipeController@delete')->name('recipe.delete');
-});
+// Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
+//     Route::post('/auth/token', 'Auth\LoginController@auth');
+//     Route::post('login', 'AuthController@login')->name('api.login');
+//     Route::post('register', 'AuthController@register')->name('api.register');
+// });
+
+// Route::group(['middleware' => ['api', 'auth'], 'prefix' => 'recipe'], function () {
+// // Route::group(['middleware' => ['api'], 'prefix' => 'recipe'], function () {
+//     Route::get('all', 'RecipeController@all')->name('recipe.all');
+//     Route::get('show/{id}', 'RecipeController@show')->name('recipe.show');
+//     Route::post('create', 'RecipeController@create')->name('recipe.create');
+//     Route::post('update/{id}', 'RecipeController@update')->name('recipe.update');
+//     Route::post('delete/{id}', 'RecipeController@delete')->name('recipe.delete');
+// });
