@@ -31,6 +31,16 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('closed', 'DataController@closed');
 });
 
+Route::group([
+    'namespace' => 'Auth',
+    'middleware' => 'api',
+    'prefix' => 'password',
+], function () {
+    Route::post('create', 'PasswordResetController@create');
+    Route::get('find/{token}', 'PasswordResetController@find');
+    Route::post('reset', 'PasswordResetController@reset');
+});
+
 // Route::group(['middleware' => 'api', 'prefix' => 'auth'], function () {
 //     Route::post('/auth/token', 'Auth\LoginController@auth');
 //     Route::post('login', 'AuthController@login')->name('api.login');
